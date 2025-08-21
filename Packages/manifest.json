@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "com.deltation.mali-offline-compiler": "https://github.com/Delt06/malioc-unity.git?path=Packages/com.deltation.mali-offline-compiler",
+    "com.unity.ide.rider": "3.0.36",
+    "com.unity.memoryprofiler": "1.1.6",
+    "com.unity.performance.profile-analyzer": "1.2.3",
+    "com.unity.render-pipelines.universal": "14.0.12",
+    "com.unity.ugui": "1.0.0",
+    "com.unity.modules.ui": "1.0.0",
+    "com.unity.modules.uielements": "1.0.0"
+  }
+}
