@@ -1,10 +1,12 @@
 using System;
+using CustomLit.Editor.ShaderGraph.TargetResources;
 using CustomLit.Editor.ShaderGUI;
 using UnityEditor;
 using UnityEditor.Rendering.Universal;
 using UnityEditor.Rendering.Universal.ShaderGraph;
 using UnityEditor.ShaderGraph;
 using UnityEngine;
+using UnityEngine.UIElements;
 using static UnityEditor.Rendering.Universal.ShaderGraph.SubShaderUtils;
 using static Unity.Rendering.Universal.ShaderUtils;
 
@@ -17,6 +19,7 @@ namespace CustomLit.Editor.ShaderGraph.Targets
         public override int latestVersion => 2;
 
         public UniversalCustomLitSubTarget() => displayName = "Custom Lit";
+        public bool IsCustomParameter;
 
         protected override ShaderID shaderID => ShaderID.SG_Unlit;
 
@@ -64,6 +67,9 @@ namespace CustomLit.Editor.ShaderGraph.Targets
                 (target.surfaceType == SurfaceType.Transparent || target.alphaClip) || target.allowMaterialOverride);
             context.AddBlock(BlockFields.SurfaceDescription.AlphaClipThreshold,
                 target.alphaClip || target.allowMaterialOverride);
+            
+            //custom
+            context.AddBlock(CustomLitBlockFields.Description.TestLitParameter);
         }
 
         public override void CollectShaderProperties(PropertyCollector collector, GenerationMode generationMode)
@@ -93,6 +99,18 @@ namespace CustomLit.Editor.ShaderGraph.Targets
         {
             target.AddDefaultMaterialOverrideGUI(ref context, onChange, registerUndo);
             target.AddDefaultSurfacePropertiesGUI(ref context, onChange, registerUndo, showReceiveShadows: false);
+            
+            
+            //Custom
+            context.AddProperty("TestParameter", new Toggle { value = IsCustomParameter }, evt =>
+            {
+                if (Equals(IsCustomParameter, evt.newValue))
+                    return;
+
+                registerUndo("TestParameter Override");
+                IsCustomParameter = evt.newValue;
+                onChange();
+            });
         }
 
 
@@ -112,19 +130,10 @@ namespace CustomLit.Editor.ShaderGraph.Targets
                     generatesPreview = true,
                     passes = new PassCollection { CustomLitPasses.Forward(target, CustomLitKeywords.Forward) }
                 };
-
-                // if (target.mayWriteDepth)
-                //     result.passes.Add(PassVariant(CorePasses.DepthOnly(target), CorePragmas.Instanced));
-
-                //result.passes.Add(PassVariant(CustomLitPasses.DepthNormalOnly(target), CorePragmas.Instanced));
+                
 
                 if (target.castShadows || target.allowMaterialOverride)
                     result.passes.Add(PassVariant(CorePasses.ShadowCaster(target), CorePragmas.Instanced));
-
-                //result.passes.Add(CustomLitPasses.GBuffer(target));
-
-                // result.passes.Add(PassVariant(CorePasses.SceneSelection(target), CorePragmas.Default));
-                // result.passes.Add(PassVariant(CorePasses.ScenePicking(target), CorePragmas.Default));
 
                 return result;
             }
@@ -171,7 +180,6 @@ namespace CustomLit.Editor.ShaderGraph.Targets
 
                 CorePasses.AddTargetSurfaceControlsToPass(ref result, target);
                 CorePasses.AddAlphaToMaskControlToPass(ref result, target);
-                //CorePasses.AddLODCrossFadeControlToPass(ref result, target);
 
                 return result;
             }
@@ -219,11 +227,9 @@ namespace CustomLit.Editor.ShaderGraph.Targets
             public static readonly IncludeCollection CustomLit = new()
             {
                 // Pre-graph
-                //{ CoreIncludes.DOTSPregraph },
-                // { CoreIncludes.WriteRenderLayersPregraph },
+               
                 { CoreIncludes.CorePregraph },
                 { CoreIncludes.ShaderGraphPregraph },
-                //{ CoreIncludes.DBufferPregraph },
 
                 // Post-graph
                 { CoreIncludes.CorePostgraph },
